@@ -13,7 +13,7 @@ from django.db import connections, DEFAULT_DB_ALIAS
 
 from boundaries.apps.api.models import BoundarySet, Boundary
 
-SHAPEFILES_DIR = 'data/shapefiles'
+DEFAULT_SHAPEFILES_DIR = 'data/shapefiles'
 GEOMETRY_COLUMN = 'shape'
 
 class Command(BaseCommand):
@@ -21,6 +21,9 @@ class Command(BaseCommand):
     option_list = BaseCommand.option_list + (
         make_option('-c', '--clear', action='store_true', dest='clear',
             help='Clear all jurisdictions in the DB.'),
+        make_option('-d', '--data-dir', action='store', dest='data', 
+            default=DEFAULT_SHAPEFILES_DIR,
+            help='Load shapefiles from this directory'),
         make_option('-e', '--except', action='store', dest='except',
             help='Don\'t load these kinds of Areas, comma-delimitted.'),
         make_option('-o', '--only', action='store', dest='only',
@@ -32,7 +35,7 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         # Load configuration
-        sys.path.append(os.path.abspath(SHAPEFILES_DIR))
+        sys.path.append(options['data'])
         from definitions import SHAPEFILES
 
         if options['only']:
@@ -45,6 +48,8 @@ class Command(BaseCommand):
             sources = [s for s in SHAPEFILES if s.replace(' ', '') not in exceptions]
         else:
             sources = [s for s in SHAPEFILES]
+        
+        log.info('Loading data from %s ...' % os.path.realpath(options['data']))
         
         # Get spatial reference system for the postgis geometry field
         geometry_field = Boundary._meta.get_field_by_name(GEOMETRY_COLUMN)[0]
@@ -72,7 +77,7 @@ class Command(BaseCommand):
                     set.delete()
                     log.info('Loading new %s.' % kind)
 
-            path = os.path.join(SHAPEFILES_DIR, config['file'])
+            path = os.path.join(options['data'], config['file'])
             datasource = DataSource(path)
 
             # Assume only a single-layer in shapefile
