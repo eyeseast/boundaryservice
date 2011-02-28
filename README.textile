@@ -22,7 +22,7 @@ Finally, you will need to load some data. The project comes with one example dat
 
 <pre>./manage load_shapefiles</pre>
 
-In the future, you can load only specific shapefiles by passing the -o flag with a comma-delimited list of Boundary Sets (whitespace in the the Boundary Set's names is collapsed).  You can also reload boundary sets (clearing existing data) by passing the -c flag. Combine the two flags to clear and reload only specific datasets.
+This will load Chicago neighborhood boundaries from the included data directory. In the future, you can load only specific shapefiles by passing the -o flag with a comma-delimited list of Boundary Sets (whitespace in the the Boundary Set's names is collapsed). You can also reload boundary sets (clearing existing data) by passing the -c flag. Combine the two flags to clear and reload only specific datasets.
 
 To run the service locally you will need to run two commands in separate terminals, one to run the api and another to run the demo application.
 
@@ -43,17 +43,23 @@ Thus, there are three options for deployment:
 
 * If neither of those ideas appeal to you, it should be reasonably straight-forward to simply remove the "api" app from this project and migrate it into your own project template. (Note: this will make us cry.)
 
-h2. Adding data
+h2. Adding data (two ways)
 
-To add data to the Boundary Service you will first need to add a shapefile and its related files (prj, dbf, etc.) to the data/shapefiles directory. See data/shapefiles/neighborhoods for an example shapefile.
+First, create a data directory by running
 
-Once your data is in place, you will modify data/shapefiles/definitions.py to add a declaration for your new shapefile to the SHAPEFILES dictionary. The Chicago neighborhoods example includes extensive commenting describing the various fields and how they should be populated. Note that the Boundary Service will normally be able to infer the projection of your shapefile and automatically transform it to an appropriate internal representation.
+<pre>./manage generate_data_dir path/to/your/directory</pre>
 
-Of particular note amongst the fields are the 'ider' and 'namer' properties. These should be assigned to functions which will be passed a feature's attributes as a dictionary. 'ider' should return a unique external id for the feature. (e.g. a district id number, geographic id code or any sequential primary key) Whenever possible these ids should be stable across revisions to the dataset. 'namer' should return a canonical name for the feature, not including its kind. (e.g. "Austin" for the Austin Community Area, "Chicago" for the City of Chicago, or #42 for Police Beat #42) A number of callable classes are defined in data/shapefiles/utils.py, which should mitigate the need to write custom functions for each dataset. 
+This will create a fresh copy of the included data/shapefiles folder, complete with Chicago neighborhood shapefiles and definitions.py. Once that's done, it's time to get some data.
+
+To add data to the Boundary Service you will first need to add a shapefile and its related files (prj, dbf, etc.) to the data directory you just created, which includes Chicago neighborhoods as an example shapefile.
+
+Once your data is in place, you will modify definitions.py to add a declaration for your new shapefile to the SHAPEFILES dictionary. The Chicago neighborhoods example includes extensive commenting describing the various fields and how they should be populated. Note that the Boundary Service will normally be able to infer the projection of your shapefile and automatically transform it to an appropriate internal representation.
+
+Of particular note amongst the fields are the 'ider' and 'namer' properties. These should be assigned to functions which will be passed a feature's attributes as a dictionary. 'ider' should return a unique external id for the feature. (e.g. a district id number, geographic id code or any sequential primary key) Whenever possible these ids should be stable across revisions to the dataset. 'namer' should return a canonical name for the feature, not including its kind. (e.g. "Austin" for the Austin Community Area, "Chicago" for the City of Chicago, or #42 for Police Beat #42) A number of callable classes are defined in utils.py, which should mitigate the need to write custom functions for each dataset. 
 
 Once definitions.py has been saved the new shapefile can be loaded by running:
 
-<pre>./manage load_shapefiles -o BoundaryKindWithoutWhitespace</pre>
+<pre>./manage load_shapefiles -d path/to/your/directory -o BoundaryKindWithoutWhitespace</pre>
 
 The "-c" parameter can also be passed to clear existing boundaries of only the specified type and then load the data. Multiple boundaries can be cleared and loaded by passing a comma-separated list to "-o".
 
